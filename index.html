@@ -9,7 +9,7 @@
 <body>
     <div class="container">
         <h1>🎯 Bubble Shooter Level Generator</h1>
-        
+
         <div class="controls">
             <div class="control-group">
                 <label for="width">Grid Width:</label>
@@ -68,25 +68,46 @@
                 </div>
             </div>
         </div>
-        
+
+        <div class="batch-controls">
+            <div class="control-group">
+                <label for="batchCount">Batch Generate:</label>
+                <input type="range" id="batchCount" min="1" max="100" value="5">
+                <span id="batchCountValue">5</span> levels
+            </div>
+        </div>
+
         <div class="button-group">
             <button onclick="generateLevel()">🎲 Generate New Level</button>
-            <button onclick="generateMultiple()">📦 Generate 5 Levels</button>
-            <button class="export-btn" onclick="exportLevel('json')">📄 Export JSON</button>
-            <button class="export-btn" onclick="exportLevel('array')">🔢 Export Array</button>
+            <button onclick="generateMultiple()">📦 Generate Batch</button>
             <button class="export-btn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+            <button class="download-btn" onclick="downloadLevel('json')">💾 Download JSON</button>
+            <button class="download-btn" onclick="downloadLevel('string')">💾 Download TXT</button>
+            <button class="download-btn" onclick="downloadBatch()">💾 Download Batch</button>
         </div>
-        
+
         <div class="level-display">
             <h3>Level Preview</h3>
             <div id="levelPreview"></div>
-            
+
             <div class="metadata" id="metadata"></div>
         </div>
-        
+
         <div class="export-area">
             <h3>Export Data</h3>
             <textarea id="exportData" placeholder="Generated level data will appear here..."></textarea>
+        </div>
+
+        <div class="import-area">
+            <h3>📥 Import Level</h3>
+            <textarea id="importData" placeholder="Paste your level JSON data here..."></textarea>
+            <div class="button-group" style="margin-top: 10px;">
+                <button class="import-btn" onclick="importLevel()">📥 Import Level</button>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Created by Christopher Stupák</p>
         </div>
     </div>
 
