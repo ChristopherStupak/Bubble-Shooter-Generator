@@ -23,13 +23,21 @@ class BubbleShooterLevelGenerator {
             emptySpaces: options.emptySpaces !== undefined ? options.emptySpaces : 0.1,
             colorDensity: options.colorDensity || 0.5,
             targetMoves: options.targetMoves || 20,
-            // Special bubble settings - explicitly check for undefined to handle 0 values
+            // Special bubble settings - using distribution percentages
             birdCount: options.birdCount !== undefined ? options.birdCount : 1,
-            lockedChance: options.lockedChance !== undefined ? options.lockedChance : 0,
-            bombChance: options.bombChance !== undefined ? options.bombChance : 0,
-            transparentChance: options.transparentChance !== undefined ? options.transparentChance : 0,
-            stoneChance: options.stoneChance !== undefined ? options.stoneChance : 0
+            lockedDistribution: options.lockedChance !== undefined ? options.lockedChance : 0,
+            bombDistribution: options.bombChance !== undefined ? options.bombChance : 0,
+            transparentDistribution: options.transparentChance !== undefined ? options.transparentChance : 0,
+            stoneDistribution: options.stoneChance !== undefined ? options.stoneChance : 0
         };
+
+        // Validate total distribution doesn't exceed 100%
+        const totalDistribution = config.lockedDistribution + config.bombDistribution + 
+                                 config.transparentDistribution + config.stoneDistribution;
+        
+        if (totalDistribution > 1.0) {
+            throw new Error(`Total special bubble distribution (${Math.round(totalDistribution * 100)}%) exceeds 100%`);
+        }
 
         const level = this.createLevel(config);
         return {
@@ -107,8 +115,8 @@ class BubbleShooterLevelGenerator {
             this.placeBirds(grid, config);
         }
 
-        // Step 2: Replace bubbles with other special types (percentage based)
-        this.replaceWithSpecialTypes(grid, config);
+        // Step 2: Replace bubbles with other special types based on distribution
+        this.replaceWithDistribution(grid, config);
     }
 
     // Place exact number of birds
@@ -147,43 +155,85 @@ class BubbleShooterLevelGenerator {
         }
     }
 
-    // Replace normal bubbles with special types based on percentages
-    replaceWithSpecialTypes(grid, config) {
-        // Skip top rows to avoid placing stones there
-        const skipTopRows = Math.min(2, grid.length);
-
-        for (let row = skipTopRows; row < grid.length; row++) {
-            for (let col = 0; col < grid[row].length; col++) {
+    // Replace normal bubbles with special types based on distribution percentages
+    replaceWithDistribution(grid, config) {
+        // Collect eligible bubbles from left half only (for mirroring)
+        const eligibleBubbles = [];
+        for (let row = 0; row < grid.length; row++) {
+            const isEvenRow = row % 2 === 0;
+            const bubbleCount = isEvenRow ? config.width : config.width - 1;
+            const halfWidth = Math.ceil(bubbleCount / 2);
+            
+            for (let col = 0; col < halfWidth; col++) {
                 if (grid[row][col] && grid[row][col].type === 'normal') {
-                    const originalColor = grid[row][col].color;
-                    let replaced = false;
-
-                    // Check each special type (only if chance > 0)
-                    if (!replaced && config.lockedChance > 0 && Math.random() < config.lockedChance) {
-                        grid[row][col] = this.createBubble('locked', originalColor, { lockLevel: 2 });
-                        this.mirrorSpecialBubble(grid, row, col, 'locked', originalColor, { lockLevel: 2 });
-                        replaced = true;
-                    }
-
-                    if (!replaced && config.bombChance > 0 && Math.random() < config.bombChance) {
-                        grid[row][col] = this.createBubble('bomb');
-                        this.mirrorSpecialBubble(grid, row, col, 'bomb');
-                        replaced = true;
-                    }
-
-                    if (!replaced && config.transparentChance > 0 && Math.random() < config.transparentChance) {
-                        grid[row][col] = this.createBubble('transparent');
-                        this.mirrorSpecialBubble(grid, row, col, 'transparent');
-                        replaced = true;
-                    }
-
-                    if (!replaced && config.stoneChance > 0 && Math.random() < config.stoneChance) {
-                        grid[row][col] = this.createBubble('stone');
-                        this.mirrorSpecialBubble(grid, row, col, 'stone');
-                        replaced = true;
-                    }
+                    eligibleBubbles.push({ row, col, originalColor: grid[row][col].color });
                 }
             }
+        }
+
+        if (eligibleBubbles.length === 0) return;
+
+        // Separate eligible bubbles for stones (skip top 2 rows) and other specials (all rows)
+        const skipTopRows = Math.min(2, grid.length);
+        const stoneEligible = eligibleBubbles.filter(bubble => bubble.row >= skipTopRows);
+        const otherSpecialsEligible = eligibleBubbles;
+
+        // Calculate exact counts for each special type
+        const totalEligible = eligibleBubbles.length;
+        const stoneTotal = stoneEligible.length;
+        
+        const counts = {
+            locked: Math.floor(totalEligible * config.lockedDistribution),
+            bomb: Math.floor(totalEligible * config.bombDistribution),
+            transparent: Math.floor(totalEligible * config.transparentDistribution),
+            stone: Math.floor(stoneTotal * config.stoneDistribution)
+        };
+
+        // Shuffle eligible bubbles for random placement
+        this.shuffleArray(otherSpecialsEligible);
+        this.shuffleArray(stoneEligible);
+
+        let placedCount = 0;
+
+        // Place locked bubbles (can be anywhere)
+        for (let i = 0; i < counts.locked && placedCount < otherSpecialsEligible.length; i++) {
+            const bubble = otherSpecialsEligible[placedCount];
+            grid[bubble.row][bubble.col] = this.createBubble('locked', bubble.originalColor, { lockLevel: 2 });
+            this.mirrorSpecialBubble(grid, bubble.row, bubble.col, 'locked', bubble.originalColor, { lockLevel: 2 });
+            placedCount++;
+        }
+
+        // Place bombs (can be anywhere)
+        for (let i = 0; i < counts.bomb && placedCount < otherSpecialsEligible.length; i++) {
+            const bubble = otherSpecialsEligible[placedCount];
+            grid[bubble.row][bubble.col] = this.createBubble('bomb');
+            this.mirrorSpecialBubble(grid, bubble.row, bubble.col, 'bomb');
+            placedCount++;
+        }
+
+        // Place transparent bubbles (can be anywhere)
+        for (let i = 0; i < counts.transparent && placedCount < otherSpecialsEligible.length; i++) {
+            const bubble = otherSpecialsEligible[placedCount];
+            grid[bubble.row][bubble.col] = this.createBubble('transparent');
+            this.mirrorSpecialBubble(grid, bubble.row, bubble.col, 'transparent');
+            placedCount++;
+        }
+
+        // Place stones (only in rows 2+, separate counter)
+        for (let i = 0; i < counts.stone && i < stoneEligible.length; i++) {
+            const bubble = stoneEligible[i];
+            if (grid[bubble.row][bubble.col] && grid[bubble.row][bubble.col].type === 'normal') {
+                grid[bubble.row][bubble.col] = this.createBubble('stone');
+                this.mirrorSpecialBubble(grid, bubble.row, bubble.col, 'stone');
+            }
+        }
+    }
+
+    // Utility function to shuffle array in place
+    shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
         }
     }
 

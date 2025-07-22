@@ -21,6 +21,41 @@ function validateInput(input) {
     } else {
         input.classList.remove('invalid');
         hideInputError(input);
+        
+        // Check special bubble distribution total
+        validateDistributionTotal();
+        return true;
+    }
+}
+
+function validateDistributionTotal() {
+    const lockedValue = parseFloat(document.getElementById('lockedChance').value) || 0;
+    const bombValue = parseFloat(document.getElementById('bombChance').value) || 0;
+    const transparentValue = parseFloat(document.getElementById('transparentChance').value) || 0;
+    const stoneValue = parseFloat(document.getElementById('stoneChance').value) || 0;
+    
+    const total = lockedValue + bombValue + transparentValue + stoneValue;
+    
+    const specialInputs = ['lockedChance', 'bombChance', 'transparentChance', 'stoneChance'];
+    
+    if (total > 100) {
+        // Mark all special bubble inputs as invalid
+        specialInputs.forEach(id => {
+            const input = document.getElementById(id);
+            input.classList.add('invalid');
+            showInputError(input, `Total special bubbles: ${total.toFixed(1)}% exceeds 100%`);
+        });
+        return false;
+    } else {
+        // Clear distribution errors if total is valid
+        specialInputs.forEach(id => {
+            const input = document.getElementById(id);
+            const errorDiv = input.parentNode.querySelector('.error');
+            if (errorDiv && errorDiv.textContent.includes('Total special bubbles')) {
+                errorDiv.remove();
+                input.classList.remove('invalid');
+            }
+        });
         return true;
     }
 }
@@ -69,15 +104,15 @@ function getSettings() {
         width: Math.max(4, parseInt(document.getElementById('width').value) || 12),
         height: Math.max(4, parseInt(document.getElementById('height').value) || 8),
         colors: Math.max(1, parseInt(document.getElementById('colors').value) || 4),
-        emptySpaces: Math.max(0, Math.min(30, parseFloat(document.getElementById('emptySpaces').value) || 0)) / 100,
+        emptySpaces: Math.max(0, Math.min(100, parseFloat(document.getElementById('emptySpaces').value) || 0)) / 100,
         colorDensity: Math.max(0, Math.min(100, parseFloat(document.getElementById('colorDensity').value) || 50)) / 100,
         targetMoves: Math.max(1, parseInt(document.getElementById('targetMoves').value) || 20),
         // Special bubble settings
         birdCount: Math.max(0, parseInt(document.getElementById('birdCount').value) || 0),
-        lockedChance: Math.max(0, Math.min(50, parseFloat(document.getElementById('lockedChance').value) || 0)) / 100,
-        bombChance: Math.max(0, Math.min(30, parseFloat(document.getElementById('bombChance').value) || 0)) / 100,
-        transparentChance: Math.max(0, Math.min(40, parseFloat(document.getElementById('transparentChance').value) || 0)) / 100,
-        stoneChance: Math.max(0, Math.min(40, parseFloat(document.getElementById('stoneChance').value) || 0)) / 100
+        lockedChance: Math.max(0, Math.min(100, parseFloat(document.getElementById('lockedChance').value) || 0)) / 100,
+        bombChance: Math.max(0, Math.min(100, parseFloat(document.getElementById('bombChance').value) || 0)) / 100,
+        transparentChance: Math.max(0, Math.min(100, parseFloat(document.getElementById('transparentChance').value) || 0)) / 100,
+        stoneChance: Math.max(0, Math.min(100, parseFloat(document.getElementById('stoneChance').value) || 0)) / 100
     };
     
     // Validate all settings are within bounds
@@ -85,6 +120,7 @@ function getSettings() {
     settings.height = Math.min(settings.height, 300);
     settings.colors = Math.min(settings.colors, 7);
     settings.targetMoves = Math.min(settings.targetMoves, 999);
+    settings.birdCount = Math.min(settings.birdCount, 999);
     
     return settings;
 }
@@ -99,6 +135,11 @@ function generateLevel() {
             allValid = false;
         }
     });
+    
+    // Additional check for distribution total
+    if (!validateDistributionTotal()) {
+        allValid = false;
+    }
     
     if (!allValid) {
         showNotification('Please fix input validation errors before generating!', 'error');
@@ -126,6 +167,11 @@ function generateMultiple() {
             allValid = false;
         }
     });
+    
+    // Additional check for distribution total
+    if (!validateDistributionTotal()) {
+        allValid = false;
+    }
     
     if (!allValid) {
         showNotification('Please fix input validation errors before generating!', 'error');
