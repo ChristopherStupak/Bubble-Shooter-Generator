@@ -12,29 +12,53 @@
 
         <div class="controls">
             <div class="control-group">
-                <label for="width">Grid Width:</label>
-                <input type="range" id="width" min="4" max="30" value="12">
-                <span id="widthValue">12</span>
+                <div class="control-row">
+                    <label for="width">Grid Width:</label>
+                    <input type="number" id="width" min="4" max="30" value="12" data-default="12">
+                </div>
+                <div class="help-text">Range: 4-30 bubbles</div>
             </div>
+            
             <div class="control-group">
-                <label for="height">Grid Height:</label>
-                <input type="range" id="height" min="4" max="300" value="8">
-                <span id="heightValue">8</span>
+                <div class="control-row">
+                    <label for="height">Grid Height:</label>
+                    <input type="number" id="height" min="4" max="300" value="8" data-default="8">
+                </div>
+                <div class="help-text">Range: 4-300 rows</div>
             </div>
+            
             <div class="control-group">
-                <label for="colors">Number of Colors:</label>
-                <input type="range" id="colors" min="1" max="7" value="4">
-                <span id="colorsValue">4</span>
+                <div class="control-row">
+                    <label for="colors">Colors:</label>
+                    <input type="number" id="colors" min="1" max="7" value="4" data-default="4">
+                </div>
+                <div class="help-text">Range: 1-7 colors</div>
             </div>
+            
             <div class="control-group">
-                <label for="emptySpaces">Empty Spaces (%):</label>
-                <input type="range" id="emptySpaces" min="0" max="30" value="10">
-                <span id="emptySpacesValue">10%</span>
+                <div class="control-row">
+                    <label for="emptySpaces">Empty Spaces:</label>
+                    <input type="number" id="emptySpaces" min="0" max="30" step="0.1" value="10" data-default="10">
+                    <span class="unit">%</span>
+                </div>
+                <div class="help-text">Range: 0-30%</div>
             </div>
+            
             <div class="control-group">
-                <label for="colorDensity">Color Density (%):</label>
-                <input type="range" id="colorDensity" min="0" max="100" value="50">
-                <span id="colorDensityValue">50%</span>
+                <div class="control-row">
+                    <label for="colorDensity">Color Density:</label>
+                    <input type="number" id="colorDensity" min="0" max="100" step="0.1" value="50" data-default="50">
+                    <span class="unit">%</span>
+                </div>
+                <div class="help-text">Range: 0-100%</div>
+            </div>
+            
+            <div class="control-group">
+                <div class="control-row">
+                    <label for="targetMoves">Target Moves:</label>
+                    <input type="number" id="targetMoves" min="1" max="999" value="20" data-default="20">
+                </div>
+                <div class="help-text">Range: 1-999 moves</div>
             </div>
         </div>
 
@@ -42,44 +66,67 @@
             <h3>🌟 Special Bubbles</h3>
             <div class="controls">
                 <div class="control-group">
-                    <label for="birdCount">🐦 Birds (targets):</label>
-                    <input type="range" id="birdCount" min="0" max="10" value="1">
-                    <span id="birdCountValue">1</span>
+                    <div class="control-row">
+                        <label for="birdCount">🐦 Birds (targets):</label>
+                        <input type="number" id="birdCount" min="0" max="10" value="1" data-default="1">
+                    </div>
+                    <div class="help-text">Exact count: 0-10 birds</div>
                 </div>
+                
                 <div class="control-group">
-                    <label for="lockedChance">🔒 Locked Bubbles (%):</label>
-                    <input type="range" id="lockedChance" min="0" max="50" value="5">
-                    <span id="lockedChanceValue">5%</span>
+                    <div class="control-row">
+                        <label for="lockedChance">🔒 Locked:</label>
+                        <input type="number" id="lockedChance" min="0" max="50" step="0.1" value="5" data-default="5">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="help-text">Range: 0-50%</div>
                 </div>
+                
                 <div class="control-group">
-                    <label for="bombChance">💣 Bombs (%):</label>
-                    <input type="range" id="bombChance" min="0" max="30" value="2">
-                    <span id="bombChanceValue">2%</span>
+                    <div class="control-row">
+                        <label for="bombChance">💣 Bombs:</label>
+                        <input type="number" id="bombChance" min="0" max="30" step="0.1" value="2" data-default="2">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="help-text">Range: 0-30%</div>
                 </div>
+                
                 <div class="control-group">
-                    <label for="transparentChance">⚪ Transparent (%):</label>
-                    <input type="range" id="transparentChance" min="0" max="40" value="3">
-                    <span id="transparentChanceValue">3%</span>
+                    <div class="control-row">
+                        <label for="transparentChance">⚪ Transparent:</label>
+                        <input type="number" id="transparentChance" min="0" max="40" step="0.1" value="3" data-default="3">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="help-text">Range: 0-40%</div>
                 </div>
+                
                 <div class="control-group">
-                    <label for="stoneChance">🪨 Stones (%):</label>
-                    <input type="range" id="stoneChance" min="0" max="40" value="3">
-                    <span id="stoneChanceValue">3%</span>
+                    <div class="control-row">
+                        <label for="stoneChance">🪨 Stones:</label>
+                        <input type="number" id="stoneChance" min="0" max="40" step="0.1" value="3" data-default="3">
+                        <span class="unit">%</span>
+                    </div>
+                    <div class="help-text">Range: 0-40%</div>
                 </div>
             </div>
         </div>
 
         <div class="batch-controls">
+            <h3>📦 Batch Generation</h3>
             <div class="control-group">
-                <label for="batchCount">Batch Generate:</label>
-                <input type="range" id="batchCount" min="1" max="100" value="5">
-                <span id="batchCountValue">5</span> levels
+                <div class="control-row">
+                    <label for="batchCount">Batch Count:</label>
+                    <input type="number" id="batchCount" min="1" max="100" value="5" data-default="5">
+                    <span class="unit">levels</span>
+                </div>
+                <div class="help-text">Generate 1-100 levels at once</div>
             </div>
         </div>
 
         <div class="button-group">
-            <button onclick="generateLevel()">🎲 Generate New Level</button>
-            <button onclick="generateMultiple()">📦 Generate Batch</button>
+            <button onclick="generateLevel()" title="Ctrl+G">🎲 Generate New Level</button>
+            <button onclick="generateMultiple()" title="Ctrl+B">📦 Generate Batch</button>
+            <button onclick="resetToDefaults()" class="reset-btn" title="Ctrl+R">🔄 Reset Defaults</button>
             <button class="export-btn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
             <button class="download-btn" onclick="downloadLevel('json')">💾 Download JSON</button>
             <button class="download-btn" onclick="downloadLevel('string')">💾 Download TXT</button>
@@ -89,13 +136,17 @@
         <div class="level-display">
             <h3>Level Preview</h3>
             <div id="levelPreview"></div>
-
             <div class="metadata" id="metadata"></div>
         </div>
 
         <div class="export-area">
             <h3>Export Data</h3>
             <textarea id="exportData" placeholder="Generated level data will appear here..."></textarea>
+            <div class="button-group" style="margin-top: 10px;">
+                <button class="export-btn" onclick="exportLevel('json')">📄 Export as JSON</button>
+                <button class="export-btn" onclick="exportLevel('string')">📄 Export as String</button>
+                <button class="export-btn" onclick="exportLevel('array')">📄 Export as Array</button>
+            </div>
         </div>
 
         <div class="import-area">
@@ -108,6 +159,7 @@
 
         <div class="footer">
             <p>Created by Christopher Stupák</p>
+            <p><small>Keyboard shortcuts: Ctrl+G (Generate), Ctrl+B (Batch), Ctrl+R (Reset)</small></p>
         </div>
     </div>
 

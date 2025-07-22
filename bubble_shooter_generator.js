@@ -22,6 +22,7 @@ class BubbleShooterLevelGenerator {
             colors: options.colors || 4,
             emptySpaces: options.emptySpaces !== undefined ? options.emptySpaces : 0.1,
             colorDensity: options.colorDensity || 0.5,
+            targetMoves: options.targetMoves || 20,
             // Special bubble settings - explicitly check for undefined to handle 0 values
             birdCount: options.birdCount !== undefined ? options.birdCount : 1,
             lockedChance: options.lockedChance !== undefined ? options.lockedChance : 0,
@@ -355,6 +356,7 @@ class BubbleShooterLevelGenerator {
             colorDistribution,
             typeDistribution,
             estimatedMoves: Math.floor(bubbleCount / 3),
+            targetMoves: config.targetMoves,
             targetBirds: typeDistribution.bird || 0
         };
     }

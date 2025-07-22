@@ -1,4 +1,4 @@
-// Enhanced Editor functionality with importer
+// Enhanced Editor functionality with number inputs
 // Check for required dependency
 if (typeof BubbleShooterLevelGenerator === 'undefined') {
     console.error('BubbleShooterLevelGenerator not found! Please include bubble_shooter_generator.js');
@@ -8,78 +8,144 @@ if (typeof BubbleShooterLevelGenerator === 'undefined') {
 const generator = new BubbleShooterLevelGenerator();
 let currentLevel = null;
 
-// Update range displays
-document.getElementById('width').addEventListener('input', (e) => {
-    document.getElementById('widthValue').textContent = e.target.value;
-});
-document.getElementById('height').addEventListener('input', (e) => {
-    document.getElementById('heightValue').textContent = e.target.value;
-});
-document.getElementById('colors').addEventListener('input', (e) => {
-    document.getElementById('colorsValue').textContent = e.target.value;
-});
-document.getElementById('emptySpaces').addEventListener('input', (e) => {
-    document.getElementById('emptySpacesValue').textContent = e.target.value + '%';
-});
-document.getElementById('colorDensity').addEventListener('input', (e) => {
-    document.getElementById('colorDensityValue').textContent = e.target.value + '%';
-});
-document.getElementById('batchCount').addEventListener('input', (e) => {
-    document.getElementById('batchCountValue').textContent = e.target.value;
-});
+// Input validation and real-time feedback
+function validateInput(input) {
+    const value = parseFloat(input.value);
+    const min = parseFloat(input.min);
+    const max = parseFloat(input.max);
+    
+    if (isNaN(value) || value < min || value > max) {
+        input.classList.add('invalid');
+        showInputError(input, `Value must be between ${min} and ${max}`);
+        return false;
+    } else {
+        input.classList.remove('invalid');
+        hideInputError(input);
+        return true;
+    }
+}
 
-// Special bubble controls
-document.getElementById('birdCount').addEventListener('input', (e) => {
-    document.getElementById('birdCountValue').textContent = e.target.value;
-});
-document.getElementById('lockedChance').addEventListener('input', (e) => {
-    document.getElementById('lockedChanceValue').textContent = e.target.value + '%';
-});
-document.getElementById('bombChance').addEventListener('input', (e) => {
-    document.getElementById('bombChanceValue').textContent = e.target.value + '%';
-});
-document.getElementById('transparentChance').addEventListener('input', (e) => {
-    document.getElementById('transparentChanceValue').textContent = e.target.value + '%';
-});
-document.getElementById('stoneChance').addEventListener('input', (e) => {
-    document.getElementById('stoneChanceValue').textContent = e.target.value + '%';
-});
+function showInputError(input, message) {
+    let errorDiv = input.parentNode.querySelector('.error');
+    if (!errorDiv) {
+        errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+        input.parentNode.appendChild(errorDiv);
+    }
+    errorDiv.textContent = message;
+}
+
+function hideInputError(input) {
+    const errorDiv = input.parentNode.querySelector('.error');
+    if (errorDiv) {
+        errorDiv.remove();
+    }
+}
+
+// Add event listeners for all number inputs
+function setupInputValidation() {
+    const inputs = document.querySelectorAll('input[type="number"]');
+    inputs.forEach(input => {
+        // Real-time validation on input
+        input.addEventListener('input', () => {
+            validateInput(input);
+        });
+        
+        // Validate on blur (when user leaves field)
+        input.addEventListener('blur', () => {
+            if (input.value === '') {
+                input.value = input.getAttribute('data-default') || input.min || 0;
+            }
+            validateInput(input);
+        });
+        
+        // Store default values for reset functionality
+        input.setAttribute('data-default', input.value);
+    });
+}
 
 function getSettings() {
-    return {
+    const settings = {
         width: Math.max(4, parseInt(document.getElementById('width').value) || 12),
         height: Math.max(4, parseInt(document.getElementById('height').value) || 8),
         colors: Math.max(1, parseInt(document.getElementById('colors').value) || 4),
-        emptySpaces: Math.max(0, Math.min(100, parseFloat(document.getElementById('emptySpaces').value) || 0)) / 100,
+        emptySpaces: Math.max(0, Math.min(30, parseFloat(document.getElementById('emptySpaces').value) || 0)) / 100,
         colorDensity: Math.max(0, Math.min(100, parseFloat(document.getElementById('colorDensity').value) || 50)) / 100,
+        targetMoves: Math.max(1, parseInt(document.getElementById('targetMoves').value) || 20),
         // Special bubble settings
         birdCount: Math.max(0, parseInt(document.getElementById('birdCount').value) || 0),
-        lockedChance: Math.max(0, Math.min(100, parseFloat(document.getElementById('lockedChance').value) || 0)) / 100,
-        bombChance: Math.max(0, Math.min(100, parseFloat(document.getElementById('bombChance').value) || 0)) / 100,
-        transparentChance: Math.max(0, Math.min(100, parseFloat(document.getElementById('transparentChance').value) || 0)) / 100,
-        stoneChance: Math.max(0, Math.min(100, parseFloat(document.getElementById('stoneChance').value) || 0)) / 100
+        lockedChance: Math.max(0, Math.min(50, parseFloat(document.getElementById('lockedChance').value) || 0)) / 100,
+        bombChance: Math.max(0, Math.min(30, parseFloat(document.getElementById('bombChance').value) || 0)) / 100,
+        transparentChance: Math.max(0, Math.min(40, parseFloat(document.getElementById('transparentChance').value) || 0)) / 100,
+        stoneChance: Math.max(0, Math.min(40, parseFloat(document.getElementById('stoneChance').value) || 0)) / 100
     };
+    
+    // Validate all settings are within bounds
+    settings.width = Math.min(settings.width, 30);
+    settings.height = Math.min(settings.height, 300);
+    settings.colors = Math.min(settings.colors, 7);
+    settings.targetMoves = Math.min(settings.targetMoves, 999);
+    
+    return settings;
 }
 
 function generateLevel() {
+    // Validate all inputs before generating
+    const inputs = document.querySelectorAll('input[type="number"]');
+    let allValid = true;
+    
+    inputs.forEach(input => {
+        if (!validateInput(input)) {
+            allValid = false;
+        }
+    });
+    
+    if (!allValid) {
+        showNotification('Please fix input validation errors before generating!', 'error');
+        return;
+    }
+    
     try {
         const settings = getSettings();
         currentLevel = generator.generateLevel(settings);
         displayLevel(currentLevel);
         updateExportData();
+        showNotification('Level generated successfully!', 'success');
     } catch (error) {
         showNotification('Generation failed: ' + error.message, 'error');
     }
 }
 
 function generateMultiple() {
+    // Validate all inputs first
+    const inputs = document.querySelectorAll('input[type="number"]');
+    let allValid = true;
+    
+    inputs.forEach(input => {
+        if (!validateInput(input)) {
+            allValid = false;
+        }
+    });
+    
+    if (!allValid) {
+        showNotification('Please fix input validation errors before generating!', 'error');
+        return;
+    }
+    
     try {
         const settings = getSettings();
         const count = Math.max(1, Math.min(100, parseInt(document.getElementById('batchCount').value) || 5));
         const levels = [];
+        
+        // Show progress for large batches
+        if (count > 10) {
+            showNotification(`Generating ${count} levels...`, 'info');
+        }
+        
         for (let i = 0; i < count; i++) {
             levels.push(generator.generateLevel(settings));
         }
+        
         document.getElementById('exportData').value = JSON.stringify(levels, null, 2);
         showNotification(`Generated ${count} levels! Check the export area.`, 'success');
     } catch (error) {
@@ -115,53 +181,29 @@ function importLevel() {
 }
 
 function updateControlsFromConfig(config) {
-    if (config.width) {
-        document.getElementById('width').value = config.width;
-        document.getElementById('widthValue').textContent = config.width;
-    }
-    if (config.height) {
-        const height = Math.min(config.height, 50); // Limit for performance
-        document.getElementById('height').value = height;
-        document.getElementById('heightValue').textContent = height;
-    }
-    if (config.colors) {
-        document.getElementById('colors').value = config.colors;
-        document.getElementById('colorsValue').textContent = config.colors;
-    }
-    if (config.emptySpaces !== undefined) {
-        const value = Math.round(config.emptySpaces * 100);
-        document.getElementById('emptySpaces').value = value;
-        document.getElementById('emptySpacesValue').textContent = value + '%';
-    }
-    if (config.colorDensity !== undefined) {
-        const value = Math.round(config.colorDensity * 100);
-        document.getElementById('colorDensity').value = value;
-        document.getElementById('colorDensityValue').textContent = value + '%';
-    }
-    if (config.birdCount !== undefined) {
-        document.getElementById('birdCount').value = config.birdCount;
-        document.getElementById('birdCountValue').textContent = config.birdCount;
-    }
-    if (config.lockedChance !== undefined) {
-        const value = Math.round(config.lockedChance * 100);
-        document.getElementById('lockedChance').value = value;
-        document.getElementById('lockedChanceValue').textContent = value + '%';
-    }
-    if (config.bombChance !== undefined) {
-        const value = Math.round(config.bombChance * 100);
-        document.getElementById('bombChance').value = value;
-        document.getElementById('bombChanceValue').textContent = value + '%';
-    }
-    if (config.transparentChance !== undefined) {
-        const value = Math.round(config.transparentChance * 100);
-        document.getElementById('transparentChance').value = value;
-        document.getElementById('transparentChanceValue').textContent = value + '%';
-    }
-    if (config.stoneChance !== undefined) {
-        const value = Math.round(config.stoneChance * 100);
-        document.getElementById('stoneChance').value = value;
-        document.getElementById('stoneChanceValue').textContent = value + '%';
-    }
+    const updates = [
+        { id: 'width', value: config.width },
+        { id: 'height', value: Math.min(config.height, 300) }, // Limit for performance
+        { id: 'colors', value: config.colors },
+        { id: 'emptySpaces', value: config.emptySpaces !== undefined ? Math.round(config.emptySpaces * 100) : undefined },
+        { id: 'colorDensity', value: config.colorDensity !== undefined ? Math.round(config.colorDensity * 100) : undefined },
+        { id: 'targetMoves', value: config.targetMoves },
+        { id: 'birdCount', value: config.birdCount },
+        { id: 'lockedChance', value: config.lockedChance !== undefined ? Math.round(config.lockedChance * 100) : undefined },
+        { id: 'bombChance', value: config.bombChance !== undefined ? Math.round(config.bombChance * 100) : undefined },
+        { id: 'transparentChance', value: config.transparentChance !== undefined ? Math.round(config.transparentChance * 100) : undefined },
+        { id: 'stoneChance', value: config.stoneChance !== undefined ? Math.round(config.stoneChance * 100) : undefined }
+    ];
+    
+    updates.forEach(update => {
+        if (update.value !== undefined) {
+            const element = document.getElementById(update.id);
+            if (element) {
+                element.value = update.value;
+                validateInput(element);
+            }
+        }
+    });
 }
 
 function displayLevel(level) {
@@ -230,6 +272,10 @@ function displayLevel(level) {
             <div>Target Birds</div>
         </div>
         <div class="stat">
+            <div class="stat-value">${meta.targetMoves || 'N/A'}</div>
+            <div>Target Moves</div>
+        </div>
+        <div class="stat">
             <div class="stat-value">${types.locked || 0}</div>
             <div>Locked</div>
         </div>
@@ -260,6 +306,7 @@ function exportLevel(format) {
         return;
     }
     document.getElementById('exportData').value = generator.exportLevel(currentLevel, format);
+    showNotification(`Exported as ${format.toUpperCase()}!`, 'success');
 }
 
 async function copyToClipboard() {
@@ -332,6 +379,19 @@ function downloadBatch() {
     }
 }
 
+// Reset all inputs to default values
+function resetToDefaults() {
+    const inputs = document.querySelectorAll('input[type="number"]');
+    inputs.forEach(input => {
+        const defaultValue = input.getAttribute('data-default');
+        if (defaultValue) {
+            input.value = defaultValue;
+            validateInput(input);
+        }
+    });
+    showNotification('Reset to default values!', 'info');
+}
+
 // Simple notification system
 function showNotification(message, type = 'info') {
     // Create notification element if it doesn't exist
@@ -344,12 +404,14 @@ function showNotification(message, type = 'info') {
             top: 20px;
             right: 20px;
             padding: 15px 20px;
-            border-radius: 4px;
+            border-radius: 6px;
             color: white;
             font-weight: bold;
             z-index: 1000;
             display: none;
             max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
         `;
         document.body.appendChild(notification);
     }
@@ -365,18 +427,56 @@ function showNotification(message, type = 'info') {
     notification.style.backgroundColor = colors[type] || colors.info;
     notification.textContent = message;
     notification.style.display = 'block';
+    notification.style.opacity = '0';
+    notification.style.transform = 'translateY(-10px)';
 
-    // Auto hide after 3 seconds
+    // Animate in
     setTimeout(() => {
-        notification.style.display = 'none';
-    }, 3000);
+        notification.style.opacity = '1';
+        notification.style.transform = 'translateY(0)';
+    }, 10);
+
+    // Auto hide after 4 seconds
+    setTimeout(() => {
+        notification.style.opacity = '0';
+        notification.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            notification.style.display = 'none';
+        }, 300);
+    }, 4000);
 }
 
-// Generate initial level on page load
+// Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     try {
+        // Set up input validation
+        setupInputValidation();
+        
+        // Generate initial level
         generateLevel();
+        
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey || e.metaKey) {
+                switch (e.key) {
+                    case 'g':
+                        e.preventDefault();
+                        generateLevel();
+                        break;
+                    case 'b':
+                        e.preventDefault();
+                        generateMultiple();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        resetToDefaults();
+                        break;
+                }
+            }
+        });
+        
+        showNotification('Level editor loaded successfully! Use Ctrl+G to generate, Ctrl+B for batch, Ctrl+R to reset.', 'info');
     } catch (error) {
-        showNotification('Failed to generate initial level: ' + error.message, 'error');
+        showNotification('Failed to initialize editor: ' + error.message, 'error');
     }
 });
